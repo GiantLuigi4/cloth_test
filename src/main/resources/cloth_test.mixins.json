@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "tfc.cloth_test.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "cloth_test.refmap.json",
+  "mixins": [
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
