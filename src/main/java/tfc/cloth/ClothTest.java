@@ -2,6 +2,7 @@ package tfc.cloth;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.datafixers.util.Pair;
 import com.mojang.math.Vector4f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -14,8 +15,11 @@ import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.fml.common.Mod;
 import tfc.cloth.phys.*;
 import tfc.cloth.shapes.ClothGen;
+import tfc.cloth.shapes.Face;
+import tfc.cloth.shapes.IcoSphere;
 
 import java.util.ArrayList;
+import java.util.List;
 
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod("cloth_test")
@@ -68,8 +72,6 @@ public class ClothTest {
 	public static void postRenderSky(RenderLevelStageEvent event) {
 		if (!event.getStage().equals(RenderLevelStageEvent.Stage.AFTER_SKY)) return;
 
-//		if (true) return;
-		
 		CoM.set(0, 0, 0);
 		
 		if (true) {
@@ -85,8 +87,10 @@ public class ClothTest {
 			
 			if (dummyCloth == null) {
 //				Pair<List<Vector3>, List<Face>> pair = MeatballSphere.icosphere(3);
-//				Pair<List<Vector3>, List<Face>> pair = IcoSphere.icosphere(4);
-//				dummyCloth = ClothGen.generate(pair.getFirst(), pair.getSecond());
+//				Pair<List<Vector3>, List<Face>> pair = IcoSphere.icosphere(3);
+//				dummyCloth = new Cloth(
+//						ClothGen.generate(pair.getFirst(), pair.getSecond())
+//				);
 				
 				width = 101;
 				height = 101;
@@ -97,8 +101,8 @@ public class ClothTest {
 						.setStrongCollisions(false)
 						.setExtraStrongCollisions(true)
 				;
-//				for (AbstractPoint orderedPoint : dummyCloth.getOrderedPoints())
-//					((Point) orderedPoint).setDamping(0.98);
+				for (AbstractPoint orderedPoint : dummyCloth.getOrderedPoints())
+					((Point) orderedPoint).setDamping(0.98);
 				
 				for (AbstractPoint orderedPoint : dummyCloth.getOrderedPoints()) {
 					orderedPoint.getPos().add(-24, 100, 58);
@@ -106,31 +110,28 @@ public class ClothTest {
 				}
 				
 				for (AbstractPoint orderedPoint : dummyCloth.getOrderedPoints()) {
-					orderedPoint.constraint = new Constraint() {
-						@Override
-						public void apply(AbstractPoint point) {
-							if (point instanceof Point pt) {
-								double divisor = 200;
-
-								pt.push(
-										new Vector3(
-
-												Math.abs(
-														Math.cos(
-																Minecraft.getInstance().level.getGameTime()
-														) * Math.sin(
-																Minecraft.getInstance().level.getGameTime() * 2
-														)) / divisor,
-												0f,
-												Math.abs(
-														Math.cos(
-																Minecraft.getInstance().level.getGameTime()
-														) * Math.sin(
-																Minecraft.getInstance().level.getGameTime() * 2
-														)) / (divisor * 2)
-										)
-								);
-							}
+					orderedPoint.constraint = point -> {
+						if (point instanceof Point pt) {
+//								double divisor = 200;
+//
+//								pt.push(
+//										new Vector3(
+//
+//												Math.abs(
+//														Math.cos(
+//																Minecraft.getInstance().level.getGameTime()
+//														) * Math.sin(
+//																Minecraft.getInstance().level.getGameTime() * 2
+//														)) / divisor,
+//												0f,
+//												Math.abs(
+//														Math.cos(
+//																Minecraft.getInstance().level.getGameTime()
+//														) * Math.sin(
+//																Minecraft.getInstance().level.getGameTime() * 2
+//														)) / (divisor * 2)
+//										)
+//								);
 						}
 					};
 				}
@@ -160,6 +161,8 @@ public class ClothTest {
 		Vector4f vec4f1 = new Vector4f();
 		
 		Vector3 norm = new Vector3(0, 0, 0);
+		
+		VertexConsumer consumer = Minecraft.getInstance().renderBuffers().bufferSource().getBuffer(RenderType.LINES);
 
 //		for (AbstractPoint orderedPoint : dummyCloth.getOrderedPoints()) {
 //			Vector3 pos = orderedPoint.getPos();
@@ -189,22 +192,20 @@ public class ClothTest {
 //			}
 //		}
 		
-		VertexConsumer consumer = Minecraft.getInstance().renderBuffers().bufferSource().getBuffer(RenderType.LINES);
-		
 		for (int x = 0; x < width; x++) {
 			for (int y = 0; y < height - 1; y++) {
 				AbstractPoint orderedPoint = dummyCloth.getOrderedPoints()[x + (y * width)];
 				AbstractPoint ref = dummyCloth.getOrderedPoints()[x + ((y + 1) * width)];
 				Vector3 pos = orderedPoint.getPos();
-				
+
 				vec4f.set((float) pos.x, (float) pos.y, (float) pos.z, 1f);
 				vec4f.transform(stack.last().pose());
-				
+
 				pos = ref.getPos();
-				
+
 				vec4f1.set((float) pos.x, (float) pos.y, (float) pos.z, 1f);
 				vec4f1.transform(stack.last().pose());
-				
+
 				double sqrt = Math.sqrt((x - width / 2d) * (x - width / 2d) + (y - width / 2d) * (y - width / 2d));
 				sqrt /= Math.sqrt(width * width + height * height);
 				sqrt *= 2;
@@ -214,7 +215,7 @@ public class ClothTest {
 						(float) sqrt
 				};
 				consumer.vertex(vec4f.x(), vec4f.y(), vec4f.z()).color(col[0], col[1], col[2], 0.25f).normal(stack.last().normal(), (float) norm.x, (float) norm.y, (float) norm.z).endVertex();
-				
+
 				sqrt = Math.sqrt((x - width / 2d) * (x - width / 2d) + (y - width / 2d + 1) * (y - width / 2d + 1));
 				sqrt /= Math.sqrt(width * width + height * height);
 				sqrt *= 2;
@@ -226,21 +227,21 @@ public class ClothTest {
 				consumer.vertex(vec4f1.x(), vec4f1.y(), vec4f1.z()).color(col[0], col[1], col[2], 0.25f).normal(stack.last().normal(), (float) norm.x, (float) norm.y, (float) norm.z).endVertex();
 			}
 		}
-		
+
 		for (int x = 0; x < width - 1; x++) {
 			for (int y = 0; y < height; y++) {
 				AbstractPoint orderedPoint = dummyCloth.getOrderedPoints()[x + (y * width)];
 				AbstractPoint ref = dummyCloth.getOrderedPoints()[(x + 1) + (y * width)];
 				Vector3 pos = orderedPoint.getPos();
-				
+
 				vec4f.set((float) pos.x, (float) pos.y, (float) pos.z, 1f);
 				vec4f.transform(stack.last().pose());
-				
+
 				pos = ref.getPos();
-				
+
 				vec4f1.set((float) pos.x, (float) pos.y, (float) pos.z, 1f);
 				vec4f1.transform(stack.last().pose());
-				
+
 				double sqrt = Math.sqrt((x - width / 2d) * (x - width / 2d) + (y - width / 2d) * (y - width / 2d));
 				sqrt /= Math.sqrt(width * width + height * height);
 				sqrt *= 2;
@@ -250,7 +251,7 @@ public class ClothTest {
 						(float) sqrt
 				};
 				consumer.vertex(vec4f.x(), vec4f.y(), vec4f.z()).color(col[0], col[1], col[2], 0.25f).normal(stack.last().normal(), (float) norm.x, (float) norm.y, (float) norm.z).endVertex();
-				
+
 				sqrt = Math.sqrt((x - width / 2d + 1) * (x - width / 2d + 1) + (y - width / 2d) * (y - width / 2d));
 				sqrt /= Math.sqrt(width * width + height * height);
 				sqrt *= 2;

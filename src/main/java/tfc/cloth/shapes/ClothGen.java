@@ -13,7 +13,7 @@ public class ClothGen {
 	public static ArrayList<AbstractPoint> generate(List<Vector3> vertices, List<Face> faces) {
 		HashMap<Vector3, Vector3> vertexMap = new HashMap<>();
 		for (Vector3 vertex : vertices) vertexMap.put(vertex, vertex);
-		
+
 		HashMap<Vector3, PointBuilder> points = new HashMap<>();
 		for (Face face : faces) {
 			Vector3[] vecs = new Vector3[]{
@@ -28,7 +28,7 @@ public class ClothGen {
 				if (builder == null) points.put(vec, builder = new PointBuilder(vec));
 				builders[i] = builder;
 			}
-			
+
 			PointBuilder addTo = builders[0];
 			int maxC = addTo.refCount();
 			for (int i = 1; i < builders.length; i++) {
@@ -38,12 +38,12 @@ public class ClothGen {
 					maxC = rc;
 				}
 			}
-			
+
 			for (Vector3 vec : vecs) {
 				addTo.addRef(vec);
 			}
 		}
-		
+
 		ArrayList<AbstractPoint> finalList = new ArrayList<>();
 		for (PointBuilder value : points.values()) {
 			AbstractPoint pt = value.build();

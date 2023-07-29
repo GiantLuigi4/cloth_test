@@ -98,10 +98,10 @@ public class Point extends AbstractPoint {
 		for (int i = 0; i < refs.length; i++) {
 			Vector3 worker = new Vector3(pos);
 			worker.setDistance(refs[i], chainSize[i]);
-			pos.scl(0.5).add(worker.scl(0.5));
+//			pos.scl(0.5).add(worker.scl(0.5));
 			
-			Vector3 impulse = srcPos.copy().sub(pos);
-			this.impulse.add(impulse.scl(-2d / refs.length));
+			Vector3 impulse = worker.sub(pos);
+			this.impulse.add(impulse.scl(1d / refs.length));
 			this.pos.set(srcPos);
 		}
 	}
