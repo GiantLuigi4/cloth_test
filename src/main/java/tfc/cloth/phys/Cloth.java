@@ -3,12 +3,15 @@ package tfc.cloth.phys;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.AABB;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 
 public class Cloth {
+	AABB bounds = new AABB(0, 0, 0, 1, 1, 1);
+	
 	AbstractPoint[] orderedPoints;
 	
 	Vector3 centerOfClamping = null;
@@ -82,6 +85,22 @@ public class Cloth {
 			orderedPoint.normalize();
 		}
 //		}
+		
+		double minX = Double.POSITIVE_INFINITY;
+		double minY = Double.POSITIVE_INFINITY;
+		double minZ = Double.POSITIVE_INFINITY;
+		double maxX = Double.NEGATIVE_INFINITY;
+		double maxY = Double.NEGATIVE_INFINITY;
+		double maxZ = Double.NEGATIVE_INFINITY;
+		for (AbstractPoint orderedPoint : orderedPoints) {
+			minX = Math.min(orderedPoint.getPos().x, minX);
+			minY = Math.min(orderedPoint.getPos().y, minY);
+			minZ = Math.min(orderedPoint.getPos().z, minZ);
+			maxX = Math.max(orderedPoint.getPos().x, maxX);
+			maxY = Math.max(orderedPoint.getPos().y, maxY);
+			maxZ = Math.max(orderedPoint.getPos().z, maxZ);
+		}
+		bounds = new AABB(minX, minY, minZ, maxX, maxY, maxZ);
 	}
 	
 	public AbstractPoint[] getOrderedPoints() {
@@ -97,6 +116,7 @@ public class Cloth {
 		
 		Vector3 delta = new Vector3(0, 0, 0);
 		Vector3 worker = new Vector3(0, 0, 0);
+		Vector3 impulse = new Vector3(0, 0, 0);
 		
 		Vector3 pos = new Vector3(
 				entity.position().x,
@@ -106,7 +126,7 @@ public class Cloth {
 		
 		double count = 0;
 		
-		for (AbstractPoint orderedPoint : this.getOrderedPoints()) {
+		for (AbstractPoint orderedPoint : orderedPoints) {
 			if (pos.distance(
 					orderedPoint.getPos().x,
 					orderedPoint.getPos().y,
@@ -116,12 +136,13 @@ public class Cloth {
 				
 				worker.setDistance(orderedPoint.getPos(), colliderSize / 2);
 				
-				double ln = entity.getDeltaMovement().length();
+				double length = entity.getDeltaMovement().length();
+				double ln = length;
 				if (ln < 0.4) ln = 0;
 				else
 					ln *= 3;
 				
-				Vector3 impulse = new Vector3(
+				impulse.set(
 						worker.x - pos.x,
 						worker.y - pos.y,
 						worker.z - pos.z
@@ -131,21 +152,24 @@ public class Cloth {
 				
 				delta.add(worker.sub(pos));
 				
-				ln = entity.getDeltaMovement().length();
+				ln = length;
 				if (ln < 1) ln = 1;
 				ln = Math.pow(ln + ln, 3);
 				ln /= 8;
 				
-				count += (this.isStrongCollisions() ? 1 : 2) / ln;
+				count += (strongCollisions ? 1 : 2) / ln;
 			}
 		}
-	
+		
 		return Pair.of(
 				delta, count
 		);
 	}
 	
 	public void collide(Entity entity) {
+		if (!bounds.intersects(entity.getBoundingBox()))
+			return;
+		
 		if (!entity.level.isClientSide) {
 			if (entity instanceof Player)
 				return;
@@ -159,8 +183,8 @@ public class Cloth {
 		
 		if (count != 0) {
 			delta.scl((1d / count));
-
-			if (this.isExtraStrongCollisions()) {
+			
+			if (extraStrongCollisions) {
 				if (
 						Math.signum(entity.getDeltaMovement().x) != Math.signum(delta.x)
 				) entity.setDeltaMovement(
@@ -178,7 +202,7 @@ public class Cloth {
 				);
 			}
 			
-			delta.scl(this.getCollisionStrength());
+			delta.scl(collisionStrength);
 			entity.push(delta.x, delta.y, delta.z);
 			
 			if (delta.y > 0) {

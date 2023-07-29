@@ -34,7 +34,10 @@ public class Vector3 {
 	}
 	
 	public Vector3 add(Vector3 other) {
-		return add(other.x, other.y, other.z);
+		this.x += other.x;
+		this.y += other.y;
+		this.z += other.z;
+		return this;
 	}
 	
 	public Vector3 sub(double x, double y, double z) {
@@ -45,7 +48,10 @@ public class Vector3 {
 	}
 	
 	public Vector3 sub(Vector3 other) {
-		return sub(other.x, other.y, other.z);
+		this.x -= other.x;
+		this.y -= other.y;
+		this.z -= other.z;
+		return this;
 	}
 	
 	public Vector3 mul(double x, double y, double z) {

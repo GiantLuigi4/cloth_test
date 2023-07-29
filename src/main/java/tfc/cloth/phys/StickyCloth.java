@@ -17,6 +17,9 @@ public class StickyCloth extends Cloth {
 	}
 	
 	public void collide(Entity entity) {
+		if (!bounds.intersects(entity.getBoundingBox()))
+			return;
+		
 		if (entity instanceof Spider) {
 			super.collide(entity);
 			return;

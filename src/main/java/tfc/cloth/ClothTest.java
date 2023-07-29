@@ -7,6 +7,7 @@ import com.mojang.math.Vector4f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.util.Mth;
 import net.minecraft.world.phys.AABB;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.common.MinecraftForge;
@@ -92,8 +93,8 @@ public class ClothTest {
 //						ClothGen.generate(pair.getFirst(), pair.getSecond())
 //				);
 				
-				width = 101;
-				height = 101;
+				width = 201;
+				height = 201;
 				boolean structured = false;
 				
 				dummyCloth = new StickyCloth(ClothGen.genSquare(width, height, 1d / 2, structured))
@@ -149,6 +150,8 @@ public class ClothTest {
 		
 		tick();
 		
+//		if (true) return;
+		
 		PoseStack stack = event.getPoseStack();
 		stack.pushPose();
 		stack.translate(
@@ -159,8 +162,6 @@ public class ClothTest {
 		
 		Vector4f vec4f = new Vector4f();
 		Vector4f vec4f1 = new Vector4f();
-		
-		Vector3 norm = new Vector3(0, 0, 0);
 		
 		VertexConsumer consumer = Minecraft.getInstance().renderBuffers().bufferSource().getBuffer(RenderType.LINES);
 
@@ -192,6 +193,8 @@ public class ClothTest {
 //			}
 //		}
 		
+		double divis = Math.sqrt(width * width + height * height) / 2;
+		
 		for (int x = 0; x < width; x++) {
 			for (int y = 0; y < height - 1; y++) {
 				AbstractPoint orderedPoint = dummyCloth.getOrderedPoints()[x + (y * width)];
@@ -205,26 +208,25 @@ public class ClothTest {
 
 				vec4f1.set((float) pos.x, (float) pos.y, (float) pos.z, 1f);
 				vec4f1.transform(stack.last().pose());
-
+				
+				Vector3 norm =
+						new Vector3(
+								vec4f.x(),
+								vec4f.y(),
+								vec4f.z()
+						).sub(
+								vec4f1.x(),
+								vec4f1.y(),
+								vec4f1.z()
+						).normalize();
+				
 				double sqrt = Math.sqrt((x - width / 2d) * (x - width / 2d) + (y - width / 2d) * (y - width / 2d));
-				sqrt /= Math.sqrt(width * width + height * height);
-				sqrt *= 2;
-				float[] col = new float[]{
-						(float) sqrt,
-						(float) sqrt,
-						(float) sqrt
-				};
-				consumer.vertex(vec4f.x(), vec4f.y(), vec4f.z()).color(col[0], col[1], col[2], 0.25f).normal(stack.last().normal(), (float) norm.x, (float) norm.y, (float) norm.z).endVertex();
+				sqrt /= divis;
+				consumer.vertex(vec4f.x(), vec4f.y(), vec4f.z()).color((float) sqrt,(float)  sqrt, (float) sqrt, 0.25f).normal(stack.last().normal(), (float) norm.x, (float) norm.y, (float) norm.z).endVertex();
 
-				sqrt = Math.sqrt((x - width / 2d) * (x - width / 2d) + (y - width / 2d + 1) * (y - width / 2d + 1));
-				sqrt /= Math.sqrt(width * width + height * height);
-				sqrt *= 2;
-				col = new float[]{
-						(float) sqrt,
-						(float) sqrt,
-						(float) sqrt
-				};
-				consumer.vertex(vec4f1.x(), vec4f1.y(), vec4f1.z()).color(col[0], col[1], col[2], 0.25f).normal(stack.last().normal(), (float) norm.x, (float) norm.y, (float) norm.z).endVertex();
+				sqrt = Math.sqrt((x - width / 2d) * (x - width / 2d) + (y - width / 2d) * (y - width / 2d));
+				sqrt /= divis;
+				consumer.vertex(vec4f1.x(), vec4f1.y(), vec4f1.z()).color((float) sqrt,(float)  sqrt, (float) sqrt, 0.25f).normal(stack.last().normal(), (float) norm.x, (float) norm.y, (float) norm.z).endVertex();
 			}
 		}
 
@@ -241,26 +243,25 @@ public class ClothTest {
 
 				vec4f1.set((float) pos.x, (float) pos.y, (float) pos.z, 1f);
 				vec4f1.transform(stack.last().pose());
+				
+				Vector3 norm =
+						new Vector3(
+								vec4f.x(),
+								vec4f.y(),
+								vec4f.z()
+						).sub(
+								vec4f1.x(),
+								vec4f1.y(),
+								vec4f1.z()
+						).normalize();
 
 				double sqrt = Math.sqrt((x - width / 2d) * (x - width / 2d) + (y - width / 2d) * (y - width / 2d));
-				sqrt /= Math.sqrt(width * width + height * height);
-				sqrt *= 2;
-				float[] col = new float[]{
-						(float) sqrt,
-						(float) sqrt,
-						(float) sqrt
-				};
-				consumer.vertex(vec4f.x(), vec4f.y(), vec4f.z()).color(col[0], col[1], col[2], 0.25f).normal(stack.last().normal(), (float) norm.x, (float) norm.y, (float) norm.z).endVertex();
+				sqrt /= divis;
+				consumer.vertex(vec4f.x(), vec4f.y(), vec4f.z()).color((float) sqrt,(float)  sqrt, (float) sqrt, 0.25f).normal(stack.last().normal(), (float) norm.x, (float) norm.y, (float) norm.z).endVertex();
 
-				sqrt = Math.sqrt((x - width / 2d + 1) * (x - width / 2d + 1) + (y - width / 2d) * (y - width / 2d));
-				sqrt /= Math.sqrt(width * width + height * height);
-				sqrt *= 2;
-				col = new float[]{
-						(float) sqrt,
-						(float) sqrt,
-						(float) sqrt
-				};
-				consumer.vertex(vec4f1.x(), vec4f1.y(), vec4f1.z()).color(col[0], col[1], col[2], 0.25f).normal(stack.last().normal(), (float) norm.x, (float) norm.y, (float) norm.z).endVertex();
+				sqrt = Math.sqrt((x - width / 2d) * (x - width / 2d) + (y - width / 2d) * (y - width / 2d));
+				sqrt /= divis;
+				consumer.vertex(vec4f1.x(), vec4f1.y(), vec4f1.z()).color((float) sqrt,(float)  sqrt, (float) sqrt, 0.25f).normal(stack.last().normal(), (float) norm.x, (float) norm.y, (float) norm.z).endVertex();
 			}
 		}
 		

@@ -20,22 +20,22 @@ public class MCTracer implements Tracer {
 	
 	@Override
 	public double traceDist(Vector3 start, Vector3 end, Direction[] dir) {
-		BlockState blockState = level.getBlockState(
-				new BlockPos(start.x, start.y, start.z)
-		);
-		if (!blockState.isAir()) {
-			VoxelShape shape = blockState.getShape(
-					level,
-					new BlockPos(start.x, start.y, start.z)
-			);
-			if (shape == Shapes.empty() || shape.isEmpty()) {
-				for (AABB aabb : shape.toAabbs()) {
-					if (aabb.contains(
-							new Vec3(start.x, start.y, start.z)
-					)) return 0;
-				}
-			}
-		}
+//		BlockState blockState = level.getBlockState(
+//				new BlockPos(start.x, start.y, start.z)
+//		);
+//		if (!blockState.isAir()) {
+//			VoxelShape shape = blockState.getShape(
+//					level,
+//					new BlockPos(start.x, start.y, start.z)
+//			);
+//			if (shape == Shapes.empty() || shape.isEmpty()) {
+//				for (AABB aabb : shape.toAabbs()) {
+//					if (aabb.contains(
+//							new Vec3(start.x, start.y, start.z)
+//					)) return 0;
+//				}
+//			}
+//		}
 		
 		BlockHitResult result = level.clip(new ClipContext(
 				new Vec3(start.x , start.y, start.z),

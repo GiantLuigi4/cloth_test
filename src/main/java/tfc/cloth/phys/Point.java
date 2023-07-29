@@ -95,13 +95,15 @@ public class Point extends AbstractPoint {
 	public void normalize() {
 		Vector3 srcPos = new Vector3(pos);
 		
+		Vector3 worker = new Vector3(pos);
 		for (int i = 0; i < refs.length; i++) {
-			Vector3 worker = new Vector3(pos);
-			worker.setDistance(refs[i], chainSize[i]);
-//			pos.scl(0.5).add(worker.scl(0.5));
+			worker.set(pos)
+					.setDistance(refs[i], chainSize[i]);
 			
-			Vector3 impulse = worker.sub(pos);
-			this.impulse.add(impulse.scl(1d / refs.length));
+			this.impulse.add(
+					worker.sub(pos)
+							.scl(1d / refs.length)
+			);
 			this.pos.set(srcPos);
 		}
 	}
