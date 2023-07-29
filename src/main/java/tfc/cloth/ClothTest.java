@@ -6,7 +6,6 @@ import com.mojang.math.Vector4f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.common.MinecraftForge;
@@ -57,103 +56,8 @@ public class ClothTest {
 	
 	private static void onEntityTick(LivingEvent.LivingUpdateEvent event) {
 		if (dummyCloth == null) return;
-
-//		if (true) return;
 		
-		double colliderSize = Math.max(
-				2, Math.max(
-						event.getEntity().getBbWidth(), event.getEntity().getBbHeight()
-				)
-		);
-		
-		if (!event.getEntity().level.isClientSide) {
-			if (event.getEntity() instanceof Player)
-				return;
-		}
-		
-		Vector3 delta = new Vector3(0, 0, 0);
-		Vector3 worker = new Vector3(0, 0, 0);
-		
-		Vector3 pos = new Vector3(
-				event.getEntity().position().x,
-				event.getEntity().position().y + colliderSize / 2,
-				event.getEntity().position().z
-		);
-		
-		double count = 0;
-		
-		for (AbstractPoint orderedPoint : dummyCloth.getOrderedPoints()) {
-			if (pos.distance(
-					orderedPoint.getPos().x,
-					orderedPoint.getPos().y,
-					orderedPoint.getPos().z
-			) < colliderSize / 2) {
-				worker.set(pos);
-				
-				worker.setDistance(orderedPoint.getPos(), colliderSize / 2);
-				
-				double ln = event.getEntity().getDeltaMovement().length();
-				if (ln < 0.4) ln = 0;
-				else
-					ln *= 3;
-				
-				Vector3 impulse = new Vector3(
-						worker.x - pos.x,
-						worker.y - pos.y,
-						worker.z - pos.z
-				).scl(ln + 1);
-				
-				orderedPoint.push(impulse.scl(-0.6));
-				
-				delta.add(worker.sub(pos));
-				
-				ln = event.getEntity().getDeltaMovement().length();
-				if (ln < 1) ln = 1;
-				ln = Math.pow(ln + ln, 3);
-				ln /= 8;
-				
-				count += (dummyCloth.isStrongCollisions() ? 1 : 2) / ln;
-			}
-		}
-		
-		if (count != 0) {
-			delta.scl((1d / count));
-
-//			double dot = event.getEntity().getDeltaMovement().dot(new Vec3(
-//					delta.x, delta.y, delta.z
-//			));
-//			if (dot < 0) {
-//				event.getEntity().setDeltaMovement(
-//						event.getEntity().getDeltaMovement().x / 1.5,
-//						event.getEntity().getDeltaMovement().y / 1.5,
-//						event.getEntity().getDeltaMovement().z / 1.5
-//				);
-//			}
-			
-			if (dummyCloth.isExtraStrongCollisions()) {
-				if (
-						Math.signum(event.getEntity().getDeltaMovement().x) != Math.signum(delta.x)
-				) event.getEntity().setDeltaMovement(
-						event.getEntity().getDeltaMovement().x / 2, event.getEntity().getDeltaMovement().y, event.getEntity().getDeltaMovement().z
-				);
-				if (
-						Math.signum(event.getEntity().getDeltaMovement().y) != Math.signum(delta.y)
-				) event.getEntity().setDeltaMovement(
-						event.getEntity().getDeltaMovement().x, event.getEntity().getDeltaMovement().y / 2, event.getEntity().getDeltaMovement().z
-				);
-				if (
-						Math.signum(event.getEntity().getDeltaMovement().z) != Math.signum(delta.z)
-				) event.getEntity().setDeltaMovement(
-						event.getEntity().getDeltaMovement().x, event.getEntity().getDeltaMovement().y, event.getEntity().getDeltaMovement().z / 2
-				);
-			}
-			
-			delta.scl(dummyCloth.getCollisionStrength());
-			event.getEntity().push(delta.x, delta.y, delta.z);
-			
-			if (delta.y > 0)
-				event.getEntity().setOnGround(true);
-		}
+		dummyCloth.collide(event.getEntity());
 	}
 	
 	private static void onTick(TickEvent.ClientTickEvent event) {
@@ -188,7 +92,7 @@ public class ClothTest {
 				height = 101;
 				boolean structured = false;
 				
-				dummyCloth = ClothGen.genSquare(width, height, structured)
+				dummyCloth = new StickyCloth(ClothGen.genSquare(width, height, 1d / 2, structured))
 						.setCollisionStrength(2)
 						.setStrongCollisions(false)
 						.setExtraStrongCollisions(true)
@@ -197,8 +101,8 @@ public class ClothTest {
 //					((Point) orderedPoint).setDamping(0.98);
 				
 				for (AbstractPoint orderedPoint : dummyCloth.getOrderedPoints()) {
-					orderedPoint.getPos().add(-24, 70, 58);
-					((Point) orderedPoint).lastPos.add(-24, 70, 58);
+					orderedPoint.getPos().add(-24, 100, 58);
+					((Point) orderedPoint).lastPos.add(-24, 100, 58);
 				}
 				
 				for (AbstractPoint orderedPoint : dummyCloth.getOrderedPoints()) {
@@ -206,26 +110,26 @@ public class ClothTest {
 						@Override
 						public void apply(AbstractPoint point) {
 							if (point instanceof Point pt) {
-//								double divisor = 200;
-//
-//								pt.push(
-//										new Vector3(
-//
-//												Math.abs(
-//														Math.cos(
-//																Minecraft.getInstance().level.getGameTime()
-//														) * Math.sin(
-//																Minecraft.getInstance().level.getGameTime() * 2
-//														)) / divisor,
-//												0f,
-//												Math.abs(
-//														Math.cos(
-//																Minecraft.getInstance().level.getGameTime()
-//														) * Math.sin(
-//																Minecraft.getInstance().level.getGameTime() * 2
-//														)) / (divisor * 2)
-//										)
-//								);
+								double divisor = 200;
+
+								pt.push(
+										new Vector3(
+
+												Math.abs(
+														Math.cos(
+																Minecraft.getInstance().level.getGameTime()
+														) * Math.sin(
+																Minecraft.getInstance().level.getGameTime() * 2
+														)) / divisor,
+												0f,
+												Math.abs(
+														Math.cos(
+																Minecraft.getInstance().level.getGameTime()
+														) * Math.sin(
+																Minecraft.getInstance().level.getGameTime() * 2
+														)) / (divisor * 2)
+										)
+								);
 							}
 						}
 					};

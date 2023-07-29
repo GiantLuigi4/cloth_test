@@ -2,7 +2,6 @@ package tfc.cloth.shapes;
 
 import net.minecraft.world.phys.Vec3;
 import tfc.cloth.phys.AbstractPoint;
-import tfc.cloth.phys.Cloth;
 import tfc.cloth.phys.Point;
 import tfc.cloth.phys.Vector3;
 
@@ -11,7 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class ClothGen {
-	public static Cloth generate(List<Vector3> vertices, List<Face> faces) {
+	public static ArrayList<AbstractPoint> generate(List<Vector3> vertices, List<Face> faces) {
 		HashMap<Vector3, Vector3> vertexMap = new HashMap<>();
 		for (Vector3 vertex : vertices) vertexMap.put(vertex, vertex);
 		
@@ -52,19 +51,19 @@ public class ClothGen {
 			finalList.add(pt);
 		}
 		
-		return new Cloth(finalList);
+		return finalList;
 	}
 	
-	public static Cloth genSquare(int width, int height, boolean structured) {
+	public static ArrayList<AbstractPoint> genSquare(int width, int height, double spacing, boolean structured) {
 		HashMap<Vec3, Vector3> points = new HashMap<>();
 		
 		ArrayList<AbstractPoint> clothPoints = new ArrayList<>();
 		
-		Vector3 origin = new Vector3(width / 2d, 0, height / 2d);
+		Vector3 origin = new Vector3((width / 2d) * spacing, 0, (height / 2d) * spacing);
 		
 		for (int x = 0; x < width; x++) {
 			for (int y = 0; y < height; y++) {
-				points.put(new Vec3(x, y, 0), new Vector3(x / 2d, 0, y / 2d));
+				points.put(new Vec3(x, y, 0), new Vector3(x * spacing, 0, y * spacing));
 			}
 		}
 		
@@ -76,7 +75,7 @@ public class ClothGen {
 				if (x < width - 1) refs.add(points.get(new Vec3(x + 1, y, 0)));
 				if (y > 0) refs.add(points.get(new Vec3(x, y - 1, 0)));
 				if (y < height - 1) refs.add(points.get(new Vec3(x, y + 1, 0)));
-
+				
 				if (structured) {
 					refs.add(points.get(new Vec3(x + 1, y + 1, 0)));
 					refs.add(points.get(new Vec3(x - 1, y - 1, 0)));
@@ -103,6 +102,6 @@ public class ClothGen {
 			}
 		}
 		
-		return new Cloth(clothPoints);
+		return clothPoints;
 	}
 }
