@@ -60,6 +60,12 @@ public class ClothTest {
 
 //		if (true) return;
 		
+		double colliderSize = Math.max(
+				2, Math.max(
+						event.getEntity().getBbWidth(), event.getEntity().getBbHeight()
+				)
+		);
+		
 		if (!event.getEntity().level.isClientSide) {
 			if (event.getEntity() instanceof Player)
 				return;
@@ -70,7 +76,7 @@ public class ClothTest {
 		
 		Vector3 pos = new Vector3(
 				event.getEntity().position().x,
-				event.getEntity().position().y + event.getEntity().getBbHeight() / 2,
+				event.getEntity().position().y + colliderSize / 2,
 				event.getEntity().position().z
 		);
 		
@@ -81,10 +87,10 @@ public class ClothTest {
 					orderedPoint.getPos().x,
 					orderedPoint.getPos().y,
 					orderedPoint.getPos().z
-			) < event.getEntity().getBbHeight() / 2) {
+			) < colliderSize / 2) {
 				worker.set(pos);
 				
-				worker.setDistance(orderedPoint.getPos(), event.getEntity().getBbHeight() / 2);
+				worker.setDistance(orderedPoint.getPos(), colliderSize / 2);
 				
 				double ln = event.getEntity().getDeltaMovement().length();
 				if (ln < 0.4) ln = 0;
@@ -106,12 +112,41 @@ public class ClothTest {
 				ln = Math.pow(ln + ln, 3);
 				ln /= 8;
 				
-				count += (dummyCloth.isStrongCollisions() ? 1 : 1.5) / ln;
+				count += (dummyCloth.isStrongCollisions() ? 1 : 2) / ln;
 			}
 		}
 		
 		if (count != 0) {
 			delta.scl((1d / count));
+
+//			double dot = event.getEntity().getDeltaMovement().dot(new Vec3(
+//					delta.x, delta.y, delta.z
+//			));
+//			if (dot < 0) {
+//				event.getEntity().setDeltaMovement(
+//						event.getEntity().getDeltaMovement().x / 1.5,
+//						event.getEntity().getDeltaMovement().y / 1.5,
+//						event.getEntity().getDeltaMovement().z / 1.5
+//				);
+//			}
+			
+			if (dummyCloth.isExtraStrongCollisions()) {
+				if (
+						Math.signum(event.getEntity().getDeltaMovement().x) != Math.signum(delta.x)
+				) event.getEntity().setDeltaMovement(
+						event.getEntity().getDeltaMovement().x / 2, event.getEntity().getDeltaMovement().y, event.getEntity().getDeltaMovement().z
+				);
+				if (
+						Math.signum(event.getEntity().getDeltaMovement().y) != Math.signum(delta.y)
+				) event.getEntity().setDeltaMovement(
+						event.getEntity().getDeltaMovement().x, event.getEntity().getDeltaMovement().y / 2, event.getEntity().getDeltaMovement().z
+				);
+				if (
+						Math.signum(event.getEntity().getDeltaMovement().z) != Math.signum(delta.z)
+				) event.getEntity().setDeltaMovement(
+						event.getEntity().getDeltaMovement().x, event.getEntity().getDeltaMovement().y, event.getEntity().getDeltaMovement().z / 2
+				);
+			}
 			
 			delta.scl(dummyCloth.getCollisionStrength());
 			event.getEntity().push(delta.x, delta.y, delta.z);
@@ -128,7 +163,7 @@ public class ClothTest {
 	
 	public static void postRenderSky(RenderLevelStageEvent event) {
 		if (!event.getStage().equals(RenderLevelStageEvent.Stage.AFTER_SKY)) return;
-		
+
 //		if (true) return;
 		
 		CoM.set(0, 0, 0);
@@ -153,10 +188,14 @@ public class ClothTest {
 				height = 101;
 				boolean structured = false;
 				
-				dummyCloth = ClothGen.genSquare(width, height, structured).setCollisionStrength(2);
+				dummyCloth = ClothGen.genSquare(width, height, structured)
+						.setCollisionStrength(2)
+						.setStrongCollisions(false)
+						.setExtraStrongCollisions(true)
+				;
 //				for (AbstractPoint orderedPoint : dummyCloth.getOrderedPoints())
 //					((Point) orderedPoint).setDamping(0.98);
-
+				
 				for (AbstractPoint orderedPoint : dummyCloth.getOrderedPoints()) {
 					orderedPoint.getPos().add(-24, 70, 58);
 					((Point) orderedPoint).lastPos.add(-24, 70, 58);

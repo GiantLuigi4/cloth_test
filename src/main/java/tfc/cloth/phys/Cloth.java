@@ -11,9 +11,19 @@ public class Cloth {
 	
 	protected double collisionStrength = 0;
 	protected boolean strongCollisions = false;
+	protected boolean extraStrongCollisions = false;
 	
 	public Cloth setCollisionStrength(double strength) {
 		this.collisionStrength = strength;
+		return this;
+	}
+	
+	public boolean isExtraStrongCollisions() {
+		return extraStrongCollisions;
+	}
+	
+	public Cloth setExtraStrongCollisions(boolean extraStrongCollisions) {
+		this.extraStrongCollisions = extraStrongCollisions;
 		return this;
 	}
 	
