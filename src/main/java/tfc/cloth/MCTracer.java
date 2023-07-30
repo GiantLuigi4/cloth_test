@@ -44,6 +44,11 @@ public class MCTracer implements Tracer {
 			BlockPos bp = new BlockPos(start.x, start.y, start.z);
 			ChunkPos chunkPos = new ChunkPos(bp);
 			LevelChunk chunk = getChunk(chunkPos);
+			if (chunk == null) return BlockHitResult.miss(
+					new Vec3(start.x, start.y, start.z),
+					Direction.UP, new BlockPos(start.x, start.y, start.z)
+			);
+			
 			BlockState state = chunk.getBlockState(bp);
 			
 			if (!state.isAir()) {
