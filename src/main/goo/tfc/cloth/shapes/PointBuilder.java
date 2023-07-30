@@ -1,6 +1,5 @@
 package tfc.cloth.shapes;
 
-import tfc.cloth.phys.AbstractPoint;
 import tfc.cloth.phys.SoftBodyPoint;
 import tfc.cloth.phys.Vector3;
 

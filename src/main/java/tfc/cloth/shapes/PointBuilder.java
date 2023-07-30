@@ -1,6 +1,5 @@
 package tfc.cloth.shapes;
 
-import tfc.cloth.phys.AbstractPoint;
 import tfc.cloth.phys.Point;
 import tfc.cloth.phys.Vector3;
 
@@ -25,7 +24,7 @@ public class PointBuilder {
 	
 	private static final Vector3[] EMPTY = new Vector3[0];
 	
-	public AbstractPoint build() {
+	public Point build() {
 		if (refs.size() == 0) return null;
 		return new Point(origin, refs.toArray(EMPTY), origin.copy());
 	}

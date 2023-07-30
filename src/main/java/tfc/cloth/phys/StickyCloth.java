@@ -8,11 +8,11 @@ import net.minecraft.world.entity.player.Player;
 import java.util.Collection;
 
 public class StickyCloth extends Cloth {
-	public StickyCloth(AbstractPoint... orderedPoints) {
+	public StickyCloth(Point... orderedPoints) {
 		super(orderedPoints);
 	}
 	
-	public StickyCloth(Collection<AbstractPoint> points) {
+	public StickyCloth(Collection<Point> points) {
 		super(points);
 	}
 	

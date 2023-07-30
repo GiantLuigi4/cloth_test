@@ -6,18 +6,20 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.function.Function;
 
 public class Cloth {
 	AABB bounds = new AABB(0, 0, 0, 1, 1, 1);
 	
-	AbstractPoint[] orderedPoints;
+	Point[] orderedPoints;
 	
 	Vector3 centerOfClamping = null;
 	
 	protected double collisionStrength = 0;
 	protected boolean strongCollisions = false;
+	
 	protected boolean extraStrongCollisions = false;
 	
 	public Cloth setCollisionStrength(double strength) {
@@ -47,41 +49,66 @@ public class Cloth {
 		return collisionStrength;
 	}
 	
-	public Cloth(AbstractPoint... orderedPoints) {
-		this.orderedPoints = orderedPoints;
+	protected void init() {
+		HashMap<Vector3, Point> pointMap = null;
+		
+		for (Point orderedPoint : orderedPoints) {
+			if (orderedPoint.isAware()) {
+				if (pointMap == null) {
+					pointMap = new HashMap<>();
+					
+					for (Point point : orderedPoints) {
+						pointMap.put(point.pos, point);
+					}
+				}
+				
+				Point[] refObjs = new Point[orderedPoint.refs.length];
+				
+				for (int i = 0; i < orderedPoint.refs.length; i++) {
+					refObjs[i] = pointMap.get(orderedPoint.refs[i]);
+				}
+				
+				orderedPoint.refObjects = refObjs;
+			}
+		}
 	}
 	
-	public Cloth(Collection<AbstractPoint> points) {
-		orderedPoints = new AbstractPoint[points.size()];
-		if (points instanceof List<AbstractPoint> li) {
+	public Cloth(Point... orderedPoints) {
+		this.orderedPoints = orderedPoints;
+		init();
+	}
+	
+	public Cloth(Collection<Point> points) {
+		orderedPoints = new Point[points.size()];
+		if (points instanceof List<Point> li) {
 			for (int i = 0; i < points.size(); i++) {
 				orderedPoints[i] = li.get(i);
 			}
 		} else {
 			int i = 0;
-			for (AbstractPoint point : points) {
+			for (Point point : points) {
 				orderedPoints[i] = point;
 				i++;
 			}
 		}
+		init();
 	}
 	
 	public void tick(Tracer tracer, Vector3 worker, Function<Vector3, Vector3> gravityResolver) {
 //		for (int i = 0; i < 2; i++) {
 		tracer.recenter(this);
 		centerOfClamping = null;
-		for (AbstractPoint point : orderedPoints) {
-			if (point instanceof Point pt)
-				pt.setCloth(this);
+		for (Point point : orderedPoints) {
+			point.setCloth(this);
 			
 			point.tick(tracer, worker, gravityResolver.apply(point.getPos()));
 		}
 		
-		for (AbstractPoint point : orderedPoints) {
+		for (Point point : orderedPoints) {
 			point.constraint.apply(point);
 		}
 		
-		for (AbstractPoint orderedPoint : orderedPoints) {
+		for (Point orderedPoint : orderedPoints) {
 			orderedPoint.normalize();
 		}
 //		}
@@ -92,7 +119,7 @@ public class Cloth {
 		double maxX = Double.NEGATIVE_INFINITY;
 		double maxY = Double.NEGATIVE_INFINITY;
 		double maxZ = Double.NEGATIVE_INFINITY;
-		for (AbstractPoint orderedPoint : orderedPoints) {
+		for (Point orderedPoint : orderedPoints) {
 			minX = Math.min(orderedPoint.getPos().x, minX);
 			minY = Math.min(orderedPoint.getPos().y, minY);
 			minZ = Math.min(orderedPoint.getPos().z, minZ);
@@ -103,8 +130,12 @@ public class Cloth {
 		bounds = new AABB(minX, minY, minZ, maxX, maxY, maxZ);
 	}
 	
-	public AbstractPoint[] getOrderedPoints() {
+	public Point[] getOrderedPoints() {
 		return orderedPoints;
+	}
+	
+	public void setOrderedPoints(Point[] points) {
+		orderedPoints = points;
 	}
 	
 	public Pair<Vector3, Double> calculateOffset(Entity entity) {
@@ -126,7 +157,7 @@ public class Cloth {
 		
 		double count = 0;
 		
-		for (AbstractPoint orderedPoint : orderedPoints) {
+		for (Point orderedPoint : orderedPoints) {
 			if (pos.distance(
 					orderedPoint.getPos().x,
 					orderedPoint.getPos().y,
@@ -210,5 +241,9 @@ public class Cloth {
 				entity.fallDistance = 0;
 			}
 		}
+	}
+	
+	public AABB getBounds() {
+		return bounds;
 	}
 }

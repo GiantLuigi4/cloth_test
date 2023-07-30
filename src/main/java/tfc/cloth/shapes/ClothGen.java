@@ -1,7 +1,6 @@
 package tfc.cloth.shapes;
 
 import net.minecraft.world.phys.Vec3;
-import tfc.cloth.phys.AbstractPoint;
 import tfc.cloth.phys.Point;
 import tfc.cloth.phys.Vector3;
 
@@ -10,7 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class ClothGen {
-	public static ArrayList<AbstractPoint> generate(List<Vector3> vertices, List<Face> faces) {
+	public static ArrayList<Point> generate(List<Vector3> vertices, List<Face> faces) {
 		HashMap<Vector3, Vector3> vertexMap = new HashMap<>();
 		for (Vector3 vertex : vertices) vertexMap.put(vertex, vertex);
 
@@ -44,9 +43,9 @@ public class ClothGen {
 			}
 		}
 
-		ArrayList<AbstractPoint> finalList = new ArrayList<>();
+		ArrayList<Point> finalList = new ArrayList<>();
 		for (PointBuilder value : points.values()) {
-			AbstractPoint pt = value.build();
+			Point pt = value.build();
 			if (pt == null) continue;
 			finalList.add(pt);
 		}
@@ -54,10 +53,10 @@ public class ClothGen {
 		return finalList;
 	}
 	
-	public static ArrayList<AbstractPoint> genSquare(int width, int height, double spacing, boolean structured) {
+	public static ArrayList<Point> genSquare(int width, int height, double spacing, boolean structured) {
 		HashMap<Vec3, Vector3> points = new HashMap<>();
 		
-		ArrayList<AbstractPoint> clothPoints = new ArrayList<>();
+		ArrayList<Point> clothPoints = new ArrayList<>();
 		
 		Vector3 origin = new Vector3((width / 2d) * spacing, 0, (height / 2d) * spacing);
 		

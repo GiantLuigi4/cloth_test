@@ -108,7 +108,7 @@ public class MCTracer implements Tracer {
 			);
 			if (state.isAir()) continue;
 			
-			VoxelShape shape = state.getShape(level, current);
+			VoxelShape shape = state.getCollisionShape(level, current);
 			
 			BlockHitResult res = null;
 			
@@ -120,9 +120,6 @@ public class MCTracer implements Tracer {
 								worker.z
 						),
 						new Vec3(
-//								worker.x + dir.x,
-//								worker.y + dir.y,
-//								worker.z + dir.z
 								end.x,
 								end.y,
 								end.z

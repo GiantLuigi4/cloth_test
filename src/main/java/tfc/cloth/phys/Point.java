@@ -2,7 +2,9 @@ package tfc.cloth.phys;
 
 import net.minecraft.core.Direction;
 
-public class Point extends AbstractPoint {
+public class Point {
+	public Constraint constraint;
+	
 	Cloth myCloth = null;
 	
 	public final Vector3 pos;
@@ -108,12 +110,10 @@ public class Point extends AbstractPoint {
 		}
 	}
 	
-	@Override
 	public Vector3 getPos() {
 		return pos;
 	}
 	
-	@Override
 	public Vector3 getVeloc() {
 		return new Vector3(
 				(pos.x - lastPos.x) * damping + impulse.x,
@@ -122,8 +122,36 @@ public class Point extends AbstractPoint {
 		);
 	}
 	
-	@Override
 	public void push(Vector3 vec) {
 		impulse.add(vec);
+	}
+	
+	
+	/* awareness */
+	Point[] refObjects;
+	
+	boolean aware;
+	
+	public boolean isAware() {
+		return aware || refObjects != null;
+	}
+	
+	public Point setAware(boolean aware) {
+		this.aware = aware;
+		return this;
+	}
+	
+	public Point[] getRefObjs() {
+		return refObjects;
+	}
+	
+	public Point setRefs(Vector3[] refs) {
+		this.refs = refs;
+		return this;
+	}
+	
+	public Point setRefObjects(Point[] refObjects) {
+		this.refObjects = refObjects;
+		return this;
 	}
 }
