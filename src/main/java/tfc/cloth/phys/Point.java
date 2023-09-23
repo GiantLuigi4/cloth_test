@@ -46,6 +46,10 @@ public class Point {
 	
 	// TODO: some form of dampening based off cloth normal vector?
 	public void tick(Tracer tracer, Vector3 worker, Vector3 gravity) {
+		if (constraint != defaultConstraint) {
+			gravity = new Vector3(0, 0, 0);
+		}
+//		damping = 0.925;
 		worker.set(
 				pos.x + (pos.x - lastPos.x) * damping + gravity.x + impulse.x,
 				pos.y + (pos.y - lastPos.y) * damping + gravity.y + impulse.y,
@@ -101,12 +105,16 @@ public class Point {
 		for (int i = 0; i < refs.length; i++) {
 			worker.set(pos)
 					.setDistance(refs[i], chainSize[i]);
-			
+
 			this.impulse.add(
 					worker.sub(pos)
-							.scl(1d / refs.length)
+							.scl((1d / refs.length) * 2)
+//							.scl(1d / 4)
 			);
 			this.pos.set(srcPos);
+		}
+		if (this.impulse.length() > 0.5) {
+			this.impulse.setLength(0.5);
 		}
 	}
 	

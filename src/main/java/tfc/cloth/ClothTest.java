@@ -3,6 +3,8 @@ package tfc.cloth;
 import com.google.common.xml.XmlEscapers;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.datafixers.util.Pair;
+import com.mojang.math.Vector3f;
 import com.mojang.math.Vector4f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -23,6 +25,9 @@ import tfc.cloth.phys.Point;
 import tfc.cloth.phys.StickyCloth;
 import tfc.cloth.phys.Vector3;
 import tfc.cloth.shapes.ClothGen;
+import tfc.cloth.shapes.Face;
+import tfc.cloth.shapes.IcoSphere;
+import tfc.cloth.shapes.MeatballSphere;
 import tfc.cloth.util.ClothMesh;
 
 import java.util.ArrayList;
@@ -32,7 +37,7 @@ import java.util.List;
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod("cloth_test")
 public class ClothTest {
-	private static int width, height;
+	private static int width, height, depth;
 	private static Cloth dummyCloth;
 	private static ClothMesh mesh;
 	
@@ -152,25 +157,26 @@ public class ClothTest {
 			
 			stack.popPose();
 			
-			if (dummyCloth == null) {
+//			if (dummyCloth == null) {
+			if (false) {
 //				Pair<List<Vector3>, List<Face>> pair = MeatballSphere.icosphere(3);
 //				Pair<List<Vector3>, List<Face>> pair = IcoSphere.icosphere(3);
-//				dummyCloth = new Cloth(
-//						ClothGen.generate(pair.getFirst(), pair.getSecond())
-//				);
+//				List<Point> points = ClothGen.generate(pair.getFirst(), pair.getSecond());
+
+				width = 41;
+				height = 41;
+				depth = 41;
+				boolean structured = true;
 				
-				width = 101;
-				height = 101;
-				boolean structured = false;
-				
-				List<Point> points = ClothGen.genSquare(width, height, 1d / 2, structured);
+				List<Point> points = ClothGen.genCube(width, height, depth, 1d / 2, structured, CoM);
 				
 				for (Point orderedPoint : points) {
 					orderedPoint.setAware(true);
 					orderedPoint.setDamping(0.98);
-					
-					orderedPoint.getPos().add(-24, 100, 58);
-					orderedPoint.lastPos.add(-24, 100, 58);
+
+//					orderedPoint.getPos().add(-24, 100, 58);
+					orderedPoint.getPos().add(-24, 80, 58);
+					orderedPoint.lastPos.set(orderedPoint.getPos());
 				}
 				
 				dummyCloth = new StickyCloth(points)
@@ -181,7 +187,7 @@ public class ClothTest {
 				mesh = new ClothMesh(dummyCloth, width, height);
 				
 				for (Point orderedPoint : dummyCloth.getOrderedPoints()) {
-					orderedPoint.constraint = point -> {
+//					orderedPoint.constraint = point -> {
 //						double divisor = 200;
 //
 //						point.push(
@@ -202,7 +208,7 @@ public class ClothTest {
 //												)) / (divisor * 2)
 //								)
 //						);
-					};
+//					};
 				}
 			}
 		}
@@ -215,7 +221,7 @@ public class ClothTest {
 			count++;
 		}
 		CoM.scl(1d / count);
-		
+
 		tick();
 
 //		if (true) return;
@@ -229,7 +235,32 @@ public class ClothTest {
 		);
 		VertexConsumer consumer = Minecraft.getInstance().renderBuffers().bufferSource().getBuffer(RenderType.LINES);
 		
-		mesh.draw(consumer, stack);
+//		mesh.draw(consumer, stack);
+		Vector4f vec4f = new Vector4f();
+		Vector4f vec4f1 = new Vector4f();
+		Vector3 norm = new Vector3(0f, 0f, 0f);
+		for (Point orderedPoint : dummyCloth.getOrderedPoints()) {
+			Vector3 pos = orderedPoint.getPos();
+			Vector3[] refs = orderedPoint.getRefs();
+
+			vec4f1.set((float) pos.x, (float) pos.y, (float) pos.z, 1f);
+			vec4f1.transform(stack.last().pose());
+
+			float[] col0 = new float[]{0.5f, 0.5f, 0.5f};
+
+			for (Vector3 ref : refs) {
+				if (ref.equals(CoM)) continue;
+
+				vec4f.set((float) ref.x, (float) ref.y, (float) ref.z, 1f);
+				vec4f.transform(stack.last().pose());
+
+				ref.calcNormal(pos, pos, norm);
+				float[] col1 = new float[]{0.5f, 0.5f, 0.5f};
+
+				consumer.vertex(vec4f.x(), vec4f.y(), vec4f.z()).color(col1[0], col1[1], col1[2], 1).normal(stack.last().normal(), (float) norm.x, (float) norm.y, (float) norm.z).endVertex();
+				consumer.vertex(vec4f1.x(), vec4f1.y(), vec4f1.z()).color(col0[0], col0[1], col0[2], 1).normal(stack.last().normal(), (float) norm.x, (float) norm.y, (float) norm.z).endVertex();
+			}
+		}
 		LevelRenderer.renderLineBox(stack, consumer, new AABB(CoM.x - 0.01, CoM.y - 0.01, CoM.z - 0.01, CoM.x + 0.01, CoM.y + 0.01, CoM.z + 0.01), 0, 0, 0, 1f);
 		stack.popPose();
 	}
