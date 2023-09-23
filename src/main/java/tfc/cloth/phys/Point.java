@@ -14,7 +14,9 @@ public class Point {
 	Vector3[] refs;
 	Vector3 impulse = new Vector3(0, 0, 0);
 	double damping = 0.99;
-	
+
+	public boolean core = false;
+
 	public Point setDamping(double damping) {
 		this.damping = damping;
 		return this;
@@ -46,7 +48,7 @@ public class Point {
 	
 	// TODO: some form of dampening based off cloth normal vector?
 	public void tick(Tracer tracer, Vector3 worker, Vector3 gravity) {
-		if (constraint != defaultConstraint) {
+		if (core) {
 			gravity = new Vector3(0, 0, 0);
 		}
 //		damping = 0.925;

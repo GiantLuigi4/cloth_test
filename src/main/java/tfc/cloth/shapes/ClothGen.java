@@ -229,6 +229,7 @@ public class ClothGen {
                     origin
             ));
 
+            pt.core = true;
             pt.constraint = point -> {
 //                pt.pos.set(centerOfMass);
 //                pt.lastPos.set(centerOfMass);

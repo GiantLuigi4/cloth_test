@@ -240,8 +240,9 @@ public class ClothTest {
 		Vector4f vec4f1 = new Vector4f();
 		Vector3 norm = new Vector3(0f, 0f, 0f);
 		for (Point orderedPoint : dummyCloth.getOrderedPoints()) {
+			if (orderedPoint.core) continue;
+
 			Vector3 pos = orderedPoint.getPos();
-			if (pos.distance(CoM) < 1) continue;
 
 			Vector3[] refs = orderedPoint.getRefs();
 
@@ -251,7 +252,7 @@ public class ClothTest {
 			float[] col0 = new float[]{0.5f, 0.5f, 0.5f};
 
 			for (Vector3 ref : refs) {
-				if (ref.distance(CoM) < 1) continue;
+				if (ref.distance(CoM) < 5) continue;
 
 				vec4f.set((float) ref.x, (float) ref.y, (float) ref.z, 1f);
 				vec4f.transform(stack.last().pose());
