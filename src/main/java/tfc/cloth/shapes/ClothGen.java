@@ -160,17 +160,22 @@ public class ClothGen {
                     for (int i = 0; i < 2; i++) {
                         boolean top = i == 1;
 
+                        boolean attach = false;
+
                         ArrayList<Vector3> refs = new ArrayList<>();
                         Vec3 vec = cycleSide(l, new Vec3(x, y, top ? depth - 1 : 0));
                         if (ptsRefs.containsKey(vec)) {
                             refs = ptsRefs.get(vec);
-                            surface.add(new Vector3(vec.x, vec.y, vec.z));
+                            attach = true;
+                        } else {
+                            ptsRefs.put(vec, refs);
+                        }
 
+                        if (attach) {
+                            surface.add(points.get(vec));
                             for (Vector3 vector3 : center) {
                                 refs.add(vector3);
                             }
-                        } else {
-                            ptsRefs.put(vec, refs);
                         }
 
                         if (x > 0) refs.add(points.get(cycleSide(l, new Vec3(x - 1, y, top ? depth - 1 : 0))));
@@ -184,10 +189,10 @@ public class ClothGen {
                             refs.add(points.get(cycleSide(l, new Vec3(x - 1, y + 1, top ? depth - 1 : 0))));
                             refs.add(points.get(cycleSide(l, new Vec3(x + 1, y - 1, top ? depth - 1 : 0))));
 
-                            refs.add(points.get(cycleSide(l, new Vec3(x + 2, y, top ? depth - 1 : 0))));
-                            refs.add(points.get(cycleSide(l, new Vec3(x - 2, y, top ? depth - 1 : 0))));
-                            refs.add(points.get(cycleSide(l, new Vec3(x, y + 2, top ? depth - 1 : 0))));
-                            refs.add(points.get(cycleSide(l, new Vec3(x, y - 2, top ? depth - 1 : 0))));
+//                            refs.add(points.get(cycleSide(l, new Vec3(x + 2, y, top ? depth - 1 : 0))));
+//                            refs.add(points.get(cycleSide(l, new Vec3(x - 2, y, top ? depth - 1 : 0))));
+//                            refs.add(points.get(cycleSide(l, new Vec3(x, y + 2, top ? depth - 1 : 0))));
+//                            refs.add(points.get(cycleSide(l, new Vec3(x, y - 2, top ? depth - 1 : 0))));
 
                             int prevNull = 0;
                             while (refs.contains(null)) {
@@ -225,11 +230,11 @@ public class ClothGen {
             ));
 
             pt.constraint = point -> {
-                pt.pos.set(centerOfMass);
-                pt.lastPos.set(centerOfMass);
+//                pt.pos.set(centerOfMass);
+//                pt.lastPos.set(centerOfMass);
 
-                pt.setRefObjects(new Point[0]);
-                pt.setRefs(new Vector3[0]);
+//                pt.setRefObjects(new Point[0]);
+//                pt.setRefs(new Vector3[0]);
             };
         }
 

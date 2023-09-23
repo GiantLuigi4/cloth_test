@@ -157,8 +157,8 @@ public class ClothTest {
 			
 			stack.popPose();
 			
-//			if (dummyCloth == null) {
-			if (false) {
+			if (dummyCloth == null) {
+//			if (true) {
 //				Pair<List<Vector3>, List<Face>> pair = MeatballSphere.icosphere(3);
 //				Pair<List<Vector3>, List<Face>> pair = IcoSphere.icosphere(3);
 //				List<Point> points = ClothGen.generate(pair.getFirst(), pair.getSecond());
@@ -241,6 +241,8 @@ public class ClothTest {
 		Vector3 norm = new Vector3(0f, 0f, 0f);
 		for (Point orderedPoint : dummyCloth.getOrderedPoints()) {
 			Vector3 pos = orderedPoint.getPos();
+			if (pos.distance(CoM) < 1) continue;
+
 			Vector3[] refs = orderedPoint.getRefs();
 
 			vec4f1.set((float) pos.x, (float) pos.y, (float) pos.z, 1f);
@@ -249,7 +251,7 @@ public class ClothTest {
 			float[] col0 = new float[]{0.5f, 0.5f, 0.5f};
 
 			for (Vector3 ref : refs) {
-				if (ref.equals(CoM)) continue;
+				if (ref.distance(CoM) < 1) continue;
 
 				vec4f.set((float) ref.x, (float) ref.y, (float) ref.z, 1f);
 				vec4f.transform(stack.last().pose());
