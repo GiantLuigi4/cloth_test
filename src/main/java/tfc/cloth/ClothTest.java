@@ -158,25 +158,27 @@ public class ClothTest {
 			stack.popPose();
 
 			if (dummyCloth == null) {
-//			if (true) {
-//				Pair<List<Vector3>, List<Face>> pair = MeatballSphere.icosphere(3);
+				Pair<List<Vector3>, List<Face>> pair = MeatballSphere.icosphere(3);
 //				Pair<List<Vector3>, List<Face>> pair = IcoSphere.icosphere(3);
-//				List<Point> points = ClothGen.generate(pair.getFirst(), pair.getSecond());
+				for (Vector3 vector3 : pair.getFirst()) {
+					vector3.mul(6, 6, 6);
+				}
+				List<Point> points = ClothGen.generate(pair.getFirst(), pair.getSecond());
 
 				width = 101;
 				height = 101;
-				depth = 41;
 				boolean structured = true;
 
 //				List<Point> points = ClothGen.genCube(width, 1d / 2, structured, false);
-				List<Point> points = ClothGen.genSquare(width, height, 1d / 2, structured);
+//				List<Point> points = ClothGen.genSquare(width, height, 1d / 2, structured);
 
 				for (Point orderedPoint : points) {
 					orderedPoint.setAware(true);
 //					orderedPoint.setDamping(0.98);
-					orderedPoint.setDamping(0.995);
+//					orderedPoint.setDamping(0.995);
+					orderedPoint.setDamping(0.95);
 
-					orderedPoint.springStrength = 2;
+					orderedPoint.springStrength = 1;
 
 //					orderedPoint.getPos().add(-24, 100, 58);
 					orderedPoint.getPos().add(-24, 80, 58);
@@ -240,7 +242,7 @@ public class ClothTest {
 		VertexConsumer consumer = Minecraft.getInstance().renderBuffers().bufferSource().getBuffer(RenderType.LINES);
 
 		boolean debug = true;
-		boolean debugVeloc = false;
+		boolean debugVeloc = true;
 		boolean debugConnection = true;
 
 //		mesh.draw(consumer, stack);

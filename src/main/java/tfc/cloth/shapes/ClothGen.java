@@ -14,6 +14,10 @@ public class ClothGen {
         HashMap<Vector3, Vector3> vertexMap = new HashMap<>();
         for (Vector3 vertex : vertices) vertexMap.put(vertex, vertex);
 
+        ArrayList<Vector3> surface = new ArrayList<>();
+
+        Vector3 centerOfMass = new Vector3(0, 0, 0);
+
         HashMap<Vector3, PointBuilder> points = new HashMap<>();
         for (Face face : faces) {
             Vector3[] vecs = new Vector3[]{
@@ -25,31 +29,50 @@ public class ClothGen {
             for (int i = 0; i < vecs.length; i++) {
                 Vector3 vec = vecs[i];
                 PointBuilder builder = points.get(vec);
-                if (builder == null) points.put(vec, builder = new PointBuilder(vec));
+                if (builder == null)
+                    points.put(vec, builder = new PointBuilder(vec));
                 builders[i] = builder;
-            }
 
-            PointBuilder addTo = builders[0];
-            int maxC = addTo.refCount();
-            for (int i = 1; i < builders.length; i++) {
-                int rc = builders[i].refCount();
-                if (rc < maxC) {
-                    addTo = builders[i];
-                    maxC = rc;
+                if (!surface.contains(vec)) {
+                    surface.add(vec);
+                    centerOfMass.add(vec);
                 }
             }
 
-            for (Vector3 vec : vecs) {
-                addTo.addRef(vec);
+            for (int i1 = 0; i1 < 3; i1++) {
+                PointBuilder addTo = builders[i1];
+                int maxC = addTo.refCount();
+                for (int i = 1; i < builders.length; i++) {
+                    int rc = builders[i].refCount();
+                    if (rc < maxC) {
+                        addTo = builders[i];
+                        maxC = rc;
+                    }
+                }
+
+                for (Vector3 vec : vecs) {
+                    addTo.addRef(vec);
+                }
             }
+        }
+
+        PointBuilder core = new PointBuilder(centerOfMass);
+        for (Vector3 vector3 : surface) {
+            core.addRef(vector3);
         }
 
         ArrayList<Point> finalList = new ArrayList<>();
         for (PointBuilder value : points.values()) {
+            value.addRef(centerOfMass);
+
             Point pt = value.build();
             if (pt == null) continue;
             finalList.add(pt);
         }
+
+        Point pt = core.build();
+        pt.core = true;
+        finalList.add(pt);
 
         return finalList;
     }
