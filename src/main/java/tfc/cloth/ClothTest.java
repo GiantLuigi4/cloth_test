@@ -125,7 +125,7 @@ public class ClothTest {
 //		for (AbstractPoint orderedPoint : dummyCloth.getOrderedPoints()) {
 //			orderedPoint.getVeloc().add(new Vector3(0, new Random().nextFloat() * 10, 0));
 //		}
-		
+
 		gravity.set(0, -0.001, 0);
 		dummyCloth.tick(tracer, new Vector3(0, 0, 0), (pos) -> gravity);
 	}
@@ -156,36 +156,40 @@ public class ClothTest {
 			);
 			
 			stack.popPose();
-			
+
 			if (dummyCloth == null) {
 //			if (true) {
 //				Pair<List<Vector3>, List<Face>> pair = MeatballSphere.icosphere(3);
 //				Pair<List<Vector3>, List<Face>> pair = IcoSphere.icosphere(3);
 //				List<Point> points = ClothGen.generate(pair.getFirst(), pair.getSecond());
 
-				width = 41;
-				height = 41;
+				width = 101;
+				height = 101;
 				depth = 41;
 				boolean structured = true;
-				
-				List<Point> points = ClothGen.genCube(width, height, depth, 1d / 2, structured, CoM);
-				
+
+//				List<Point> points = ClothGen.genCube(width, 1d / 2, structured, false);
+				List<Point> points = ClothGen.genSquare(width, height, 1d / 2, structured);
+
 				for (Point orderedPoint : points) {
 					orderedPoint.setAware(true);
-					orderedPoint.setDamping(0.98);
+//					orderedPoint.setDamping(0.98);
+					orderedPoint.setDamping(0.995);
+
+					orderedPoint.springStrength = 2;
 
 //					orderedPoint.getPos().add(-24, 100, 58);
 					orderedPoint.getPos().add(-24, 80, 58);
 					orderedPoint.lastPos.set(orderedPoint.getPos());
 				}
-				
+
 				dummyCloth = new StickyCloth(points)
 						.setCollisionStrength(2)
 						.setStrongCollisions(false)
 						.setExtraStrongCollisions(true)
 				;
 				mesh = new ClothMesh(dummyCloth, width, height);
-				
+
 				for (Point orderedPoint : dummyCloth.getOrderedPoints()) {
 //					orderedPoint.constraint = point -> {
 //						double divisor = 200;
@@ -234,34 +238,67 @@ public class ClothTest {
 				-event.getCamera().getPosition().z
 		);
 		VertexConsumer consumer = Minecraft.getInstance().renderBuffers().bufferSource().getBuffer(RenderType.LINES);
-		
+
+		boolean debug = true;
+		boolean debugVeloc = true;
+		boolean debugConnection = true;
+
 //		mesh.draw(consumer, stack);
-		Vector4f vec4f = new Vector4f();
-		Vector4f vec4f1 = new Vector4f();
-		Vector3 norm = new Vector3(0f, 0f, 0f);
-		for (Point orderedPoint : dummyCloth.getOrderedPoints()) {
-			if (orderedPoint.core) continue;
+		if (debug) {
+			Vector4f vec4f = new Vector4f();
+			Vector4f vec4f1 = new Vector4f();
+			Vector3 norm = new Vector3(0f, 0f, 0f);
+			for (Point orderedPoint : dummyCloth.getOrderedPoints()) {
+				if (orderedPoint.core) continue;
 
-			Vector3 pos = orderedPoint.getPos();
+				Vector3 pos = orderedPoint.getPos();
 
-			Vector3[] refs = orderedPoint.getRefs();
+				Vector3[] refs = orderedPoint.getRefs();
 
-			vec4f1.set((float) pos.x, (float) pos.y, (float) pos.z, 1f);
-			vec4f1.transform(stack.last().pose());
+				vec4f1.set((float) pos.x, (float) pos.y, (float) pos.z, 1f);
+				vec4f1.transform(stack.last().pose());
 
-			float[] col0 = new float[]{0.5f, 0.5f, 0.5f};
+				float[] col0 = new float[]{0.5f, 0.5f, 0.5f};
 
-			for (Vector3 ref : refs) {
-				if (ref.distance(CoM) < 5) continue;
+				if (debugConnection) {
+					if (orderedPoint.getRefObjs() == null) {
+						for (Vector3 ref : refs) {
+							vec4f.set((float) ref.x, (float) ref.y, (float) ref.z, 1f);
+							vec4f.transform(stack.last().pose());
 
-				vec4f.set((float) ref.x, (float) ref.y, (float) ref.z, 1f);
-				vec4f.transform(stack.last().pose());
+							ref.calcNormal(pos, pos, norm);
+							float[] col1 = new float[]{0.5f, 0.5f, 0.5f};
 
-				ref.calcNormal(pos, pos, norm);
-				float[] col1 = new float[]{0.5f, 0.5f, 0.5f};
+							consumer.vertex(vec4f.x(), vec4f.y(), vec4f.z()).color(col1[0], col1[1], col1[2], 1).normal(stack.last().normal(), (float) norm.x, (float) norm.y, (float) norm.z).endVertex();
+							consumer.vertex(vec4f1.x(), vec4f1.y(), vec4f1.z()).color(col0[0], col0[1], col0[2], 1).normal(stack.last().normal(), (float) norm.x, (float) norm.y, (float) norm.z).endVertex();
+						}
+					} else {
+						for (Point refObj : orderedPoint.getRefObjs()) {
+							if (refObj.core) continue;
 
-				consumer.vertex(vec4f.x(), vec4f.y(), vec4f.z()).color(col1[0], col1[1], col1[2], 1).normal(stack.last().normal(), (float) norm.x, (float) norm.y, (float) norm.z).endVertex();
-				consumer.vertex(vec4f1.x(), vec4f1.y(), vec4f1.z()).color(col0[0], col0[1], col0[2], 1).normal(stack.last().normal(), (float) norm.x, (float) norm.y, (float) norm.z).endVertex();
+							Vector3 ref = refObj.getPos();
+							vec4f.set((float) ref.x, (float) ref.y, (float) ref.z, 1f);
+							vec4f.transform(stack.last().pose());
+
+							ref.calcNormal(pos, pos, norm);
+							float[] col1 = new float[]{0.5f, 0.5f, 0.5f};
+
+							consumer.vertex(vec4f.x(), vec4f.y(), vec4f.z()).color(col1[0], col1[1], col1[2], 1).normal(stack.last().normal(), (float) norm.x, (float) norm.y, (float) norm.z).endVertex();
+							consumer.vertex(vec4f1.x(), vec4f1.y(), vec4f1.z()).color(col0[0], col0[1], col0[2], 1).normal(stack.last().normal(), (float) norm.x, (float) norm.y, (float) norm.z).endVertex();
+						}
+					}
+				}
+				if (debugVeloc) {
+					Vector3 veloc = orderedPoint.getVeloc().add(orderedPoint.pos);
+					vec4f.set((float) veloc.x, (float) veloc.y, (float) veloc.z, 1f);
+					vec4f.transform(stack.last().pose());
+
+					veloc.calcNormal(pos, pos, norm);
+					float[] col1 = new float[]{1, 0, 0};
+
+					consumer.vertex(vec4f.x(), vec4f.y(), vec4f.z()).color(col1[0], col1[1], col1[2], 1).normal(stack.last().normal(), (float) norm.x, (float) norm.y, (float) norm.z).endVertex();
+					consumer.vertex(vec4f1.x(), vec4f1.y(), vec4f1.z()).color(col1[0], col1[1], col1[2], 1).normal(stack.last().normal(), (float) norm.x, (float) norm.y, (float) norm.z).endVertex();
+				}
 			}
 		}
 		LevelRenderer.renderLineBox(stack, consumer, new AABB(CoM.x - 0.01, CoM.y - 0.01, CoM.z - 0.01, CoM.x + 0.01, CoM.y + 0.01, CoM.z + 0.01), 0, 0, 0, 1f);

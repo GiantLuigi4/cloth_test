@@ -4,10 +4,12 @@ import com.mojang.datafixers.util.Pair;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
+import tfc.cloth.util.PhysThread;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 import java.util.function.Function;
 
 public class Cloth {
@@ -48,7 +50,7 @@ public class Cloth {
 	public double getCollisionStrength() {
 		return collisionStrength;
 	}
-	
+
 	protected void init() {
 		HashMap<Vector3, Point> pointMap = null;
 		
@@ -93,9 +95,17 @@ public class Cloth {
 		}
 		init();
 	}
+
+	static final PhysThread[] threads = new PhysThread[5];
+
+	static {
+		for (int i = 0; i < threads.length; i++) {
+			threads[i] = new PhysThread();
+			threads[i].start();
+		}
+	}
 	
 	public void tick(Tracer tracer, Vector3 worker, Function<Vector3, Vector3> gravityResolver) {
-//		for (int i = 0; i < 2; i++) {
 		tracer.recenter(this);
 		centerOfClamping = null;
 		for (Point point : orderedPoints) {
@@ -107,10 +117,33 @@ public class Cloth {
 		for (Point point : orderedPoints) {
 			point.constraint.apply(point);
 		}
-		
-		for (Point orderedPoint : orderedPoints) {
-			orderedPoint.normalize();
-		}
+
+//		for (int i = 0; i < 10; i++) {
+//			for (Point orderedPoint : orderedPoints) {
+//				orderedPoint.normalize();
+//			}
+//			for (Point orderedPoint : orderedPoints) {
+//				orderedPoint.move(tracer, orderedPoint.impulse, false);
+//				orderedPoint.impulse.set(0, 0, 0);
+//			}
+//		}
+
+		if (false) {
+			for (PhysThread physThread : threads) physThread.startWork();
+			for (int i = 0; i < threads.length; i++) {
+				int fi = i ;
+				threads[i].schedule(()->{
+					int s = orderedPoints.length / 5;
+					try {
+						for (int i1 = (s * fi); i1 < (s * (fi + 1)); i1++) {
+							orderedPoints[i1].normalize();
+						}
+					} catch (Throwable ignored) {
+					}
+				});
+			}
+			for (PhysThread thread : threads) thread.await();
+		} else for (Point orderedPoint : orderedPoints) orderedPoint.normalize();
 //		}
 		
 		double minX = Double.POSITIVE_INFINITY;

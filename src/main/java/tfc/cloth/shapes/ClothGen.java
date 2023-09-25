@@ -124,17 +124,28 @@ public class ClothGen {
         return null;
     }
 
-    public static ArrayList<Point> genCube(int width, int height, int depth, double spacing, boolean structured, Vector3 centerOfMass) {
+    public static ArrayList<Point> genCube(int size, double spacing, boolean structured, boolean sphere) {
         HashMap<Vec3, Vector3> points = new HashMap<>();
 
         ArrayList<Point> clothPoints = new ArrayList<>();
 
-        Vector3 origin = new Vector3((width / 2d) * spacing, (height / 2d) * spacing, (depth / 2d) * spacing);
+        Vector3 origin = new Vector3((size / 2d) * spacing, (size / 2d) * spacing, (size / 2d) * spacing);
 
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                for (int z = 0; z < depth; z++) {
-                    points.put(new Vec3(x, y, z), new Vector3(x * spacing, y * spacing, z * spacing));
+        for (int x = 0; x < size; x++) {
+            for (int y = 0; y < size; y++) {
+                for (int z = 0; z < size; z++) {
+                    if (
+                            x == 0 || y == 0 || z == 0 ||
+                                    x == size - 1 || y == size - 1 || z == size - 1
+                    ) {
+                        Vector3 vec = new Vector3(x * spacing, y * spacing, z * spacing);
+                        if (sphere) {
+                            vec.sub(origin);
+                            vec.setLength(size / 2d);
+                            vec.add(origin);
+                        }
+                        points.put(new Vec3(x, y, z), vec);
+                    }
                 }
             }
         }
@@ -155,15 +166,15 @@ public class ClothGen {
         HashMap<Vec3, ArrayList<Vector3>> ptsRefs = new HashMap<>();
 
         for (int l = 0; l < 3; l++) {
-            for (int x = 0; x < width; x++) {
-                for (int y = 0; y < width; y++) {
+            for (int x = 0; x < size; x++) {
+                for (int y = 0; y < size; y++) {
                     for (int i = 0; i < 2; i++) {
                         boolean top = i == 1;
 
                         boolean attach = false;
 
                         ArrayList<Vector3> refs = new ArrayList<>();
-                        Vec3 vec = cycleSide(l, new Vec3(x, y, top ? depth - 1 : 0));
+                        Vec3 vec = cycleSide(l, new Vec3(x, y, top ? size - 1 : 0));
                         if (ptsRefs.containsKey(vec)) {
                             refs = ptsRefs.get(vec);
                             attach = true;
@@ -178,16 +189,16 @@ public class ClothGen {
                             }
                         }
 
-                        if (x > 0) refs.add(points.get(cycleSide(l, new Vec3(x - 1, y, top ? depth - 1 : 0))));
-                        if (x < width - 1) refs.add(points.get(cycleSide(l, new Vec3(x + 1, y, top ? depth - 1 : 0))));
-                        if (y > 0) refs.add(points.get(cycleSide(l, new Vec3(x, y - 1, top ? depth - 1 : 0))));
-                        if (y < height - 1) refs.add(points.get(cycleSide(l, new Vec3(x, y + 1, top ? depth - 1 : 0))));
+                        if (x > 0) refs.add(points.get(cycleSide(l, new Vec3(x - 1, y, top ? size - 1 : 0))));
+                        if (x < size - 1) refs.add(points.get(cycleSide(l, new Vec3(x + 1, y, top ? size - 1 : 0))));
+                        if (y > 0) refs.add(points.get(cycleSide(l, new Vec3(x, y - 1, top ? size - 1 : 0))));
+                        if (y < size - 1) refs.add(points.get(cycleSide(l, new Vec3(x, y + 1, top ? size - 1 : 0))));
 
                         if (structured) {
-                            refs.add(points.get(cycleSide(l, new Vec3(x + 1, y + 1, top ? depth - 1 : 0))));
-                            refs.add(points.get(cycleSide(l, new Vec3(x - 1, y - 1, top ? depth - 1 : 0))));
-                            refs.add(points.get(cycleSide(l, new Vec3(x - 1, y + 1, top ? depth - 1 : 0))));
-                            refs.add(points.get(cycleSide(l, new Vec3(x + 1, y - 1, top ? depth - 1 : 0))));
+                            refs.add(points.get(cycleSide(l, new Vec3(x + 1, y + 1, top ? size - 1 : 0))));
+                            refs.add(points.get(cycleSide(l, new Vec3(x - 1, y - 1, top ? size - 1 : 0))));
+                            refs.add(points.get(cycleSide(l, new Vec3(x - 1, y + 1, top ? size - 1 : 0))));
+                            refs.add(points.get(cycleSide(l, new Vec3(x + 1, y - 1, top ? size - 1 : 0))));
 
 //                            refs.add(points.get(cycleSide(l, new Vec3(x + 2, y, top ? depth - 1 : 0))));
 //                            refs.add(points.get(cycleSide(l, new Vec3(x - 2, y, top ? depth - 1 : 0))));

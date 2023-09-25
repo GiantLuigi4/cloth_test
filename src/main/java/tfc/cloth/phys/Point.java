@@ -4,16 +4,18 @@ import net.minecraft.core.Direction;
 
 public class Point {
 	public Constraint constraint;
-	
+
 	Cloth myCloth = null;
-	
 	public final Vector3 pos;
 	public final Vector3 lastPos;
 	public final double[] chainSize; // TODO: should be an array, based off the initial distances
 	public final Vector3 origin;
 	Vector3[] refs;
 	Vector3 impulse = new Vector3(0, 0, 0);
+
 	double damping = 0.99;
+
+	public double springStrength = 1;
 
 	public boolean core = false;
 
@@ -21,18 +23,18 @@ public class Point {
 		this.damping = damping;
 		return this;
 	}
-	
+
 	private static final Constraint defaultConstraint = (point) -> {
 	};
-	
+
 	public void setCloth(Cloth cloth) {
 		myCloth = cloth;
 	}
-	
+
 	public Point(Vector3 pos, Vector3[] refs, Vector3 origin) {
 		this(pos, refs, origin, defaultConstraint);
 	}
-	
+
 	public Point(Vector3 pos, Vector3[] refs, Vector3 origin, Constraint constraint) {
 		this.pos = pos;
 		this.lastPos = pos.copy();
@@ -44,32 +46,34 @@ public class Point {
 		this.constraint = constraint;
 		this.origin = origin;
 	}
-	
-	
+
 	// TODO: some form of dampening based off cloth normal vector?
+
 	public void tick(Tracer tracer, Vector3 worker, Vector3 gravity) {
 		if (core) {
 			gravity = new Vector3(0, 0, 0);
 		}
-//		damping = 0.925;
 		worker.set(
 				pos.x + (pos.x - lastPos.x) * damping + gravity.x + impulse.x,
 				pos.y + (pos.y - lastPos.y) * damping + gravity.y + impulse.y,
 				pos.z + (pos.z - lastPos.z) * damping + gravity.z + impulse.z
 		);
 		impulse.set(0, 0, 0);
-		
+
 		double td = worker.distance(pos);
 		Direction[] dir = new Direction[1];
-		double d = tracer.traceDist(
-				pos, worker, dir
-		);
-		worker.sub(pos).scl(d / td).add(pos);
+		double d = td;
+		if (td != 0) {
+			d = tracer.traceDist(
+					pos, worker, dir
+			);
+			worker.sub(pos).scl(d / td).add(pos);
+		}
 		if (d < td || td == 0) {
-			
+
 			if (myCloth.centerOfClamping == null)
 				myCloth.centerOfClamping = new Vector3(pos);
-			
+
 			myCloth.centerOfClamping.scl(0.5).add(pos.copy().scl(0.5));
 
 //			worker.sub(pos);
@@ -88,21 +92,19 @@ public class Point {
 //			}
 //			worker.scl(0.125);
 //			worker.add(pos);
-			
+
 			return;
 		}
-		
+
 		lastPos.set(pos);
 		pos.set(worker);
 	}
-	
+
 	public Vector3[] getRefs() {
 		return refs;
 	}
-	
+
 	public void normalize() {
-		Vector3 srcPos = new Vector3(pos);
-		
 		Vector3 worker = new Vector3(pos);
 		for (int i = 0; i < refs.length; i++) {
 			worker.set(pos)
@@ -110,20 +112,19 @@ public class Point {
 
 			this.impulse.add(
 					worker.sub(pos)
-							.scl((1d / refs.length) * 2)
+							.scl((1d / refs.length) * springStrength)
 //							.scl(1d / 4)
 			);
-			this.pos.set(srcPos);
 		}
 		if (this.impulse.length() > 0.5) {
 			this.impulse.setLength(0.5);
 		}
 	}
-	
+
 	public Vector3 getPos() {
 		return pos;
 	}
-	
+
 	public Vector3 getVeloc() {
 		return new Vector3(
 				(pos.x - lastPos.x) * damping + impulse.x,
@@ -131,37 +132,59 @@ public class Point {
 				(pos.z - lastPos.z) * damping + impulse.z
 		);
 	}
-	
+
 	public void push(Vector3 vec) {
 		impulse.add(vec);
 	}
-	
-	
+
 	/* awareness */
+
 	Point[] refObjects;
-	
+
 	boolean aware;
-	
+
 	public boolean isAware() {
 		return aware || refObjects != null;
 	}
-	
+
 	public Point setAware(boolean aware) {
 		this.aware = aware;
 		return this;
 	}
-	
+
 	public Point[] getRefObjs() {
 		return refObjects;
 	}
-	
+
 	public Point setRefs(Vector3[] refs) {
 		this.refs = refs;
 		return this;
 	}
-	
+
 	public Point setRefObjects(Point[] refObjects) {
 		this.refObjects = refObjects;
 		return this;
+	}
+
+	public void move(Tracer tracer, Vector3 impulse, boolean push) {
+		impulse.scl(0.5);
+
+		Vector3 worker = new Vector3(pos).add(impulse);
+
+		double td = worker.distance(pos);
+		Direction[] dir = new Direction[1];
+		double d = td;
+		if (td != 0) {
+			d = tracer.traceDist(
+					pos, worker, dir
+			);
+			worker.sub(pos).scl(d / td).add(pos);
+		}
+		if (d < td || td == 0) {
+			return;
+		}
+
+		pos.add(impulse);
+		if (!push) lastPos.add(impulse);
 	}
 }

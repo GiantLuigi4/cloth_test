@@ -21,9 +21,9 @@ import tfc.cloth.phys.Vector3;
 
 public class MCTracer implements Tracer {
 	Level level;
-	
-	Long2ObjectOpenHashMap<LevelChunk> chunks = new Long2ObjectOpenHashMap<>();
-	
+
+	final Long2ObjectOpenHashMap<LevelChunk> chunks = new Long2ObjectOpenHashMap<>();
+
 	protected LevelChunk getChunk(ChunkPos chunkPos) {
 		LevelChunk chunk = chunks.get(chunkPos.toLong());
 		if (chunk == null)
@@ -36,10 +36,10 @@ public class MCTracer implements Tracer {
 			);
 		return chunk;
 	}
-	
+
 	protected BlockHitResult trace(Vector3 start, Vector3 end) {
 		double dist = start.distance(end);
-		
+
 		if (dist == 0) {
 			BlockPos bp = new BlockPos(start.x, start.y, start.z);
 			ChunkPos chunkPos = new ChunkPos(bp);
@@ -48,9 +48,9 @@ public class MCTracer implements Tracer {
 					new Vec3(start.x, start.y, start.z),
 					Direction.UP, new BlockPos(start.x, start.y, start.z)
 			);
-			
+
 			BlockState state = chunk.getBlockState(bp);
-			
+
 			if (!state.isAir()) {
 				VoxelShape sp = state.getShape(level, bp);
 				for (AABB aabb : sp.toAabbs()) {
@@ -69,30 +69,35 @@ public class MCTracer implements Tracer {
 					bp
 			);
 		}
-		
+
 		BlockPos.MutableBlockPos current = new BlockPos.MutableBlockPos();
 		BlockPos.MutableBlockPos last = new BlockPos.MutableBlockPos(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE);
 		Vector3 worker = new Vector3(start);
-		
+
 		Vec3 dir = new Vec3(
 				end.x - start.x,
 				end.y - start.y,
 				end.z - start.z
 		).normalize();
-		
+		end = end.copy().add(dir.x * -0.01, dir.y * -0.01, dir.z * -0.01);
+
 		LevelChunk currentChunk = null;
-		
-		for (double i = 0; i < dist; i += Math.min(dist, 0.1)) {
-			worker.set(start).scl(0.5).add(
-					end.x / 2,
-					end.y / 2,
-					end.z / 2
+
+		double i;
+//		for (i = 0; i < dist; i += Math.max(dist / 80, Math.min(dist, 0.1))) {
+		for (i = 0; i < dist; i += dist / 80) {
+//			double pct = i / dist;
+			double pct = 0.5;
+			worker.set(start).scl(pct).add(
+					end.x * (1 - pct),
+					end.y * (1 - pct),
+					end.z * (1 - pct)
 			);
-			
+
 			current.set(worker.x, worker.y, worker.z);
 			if (current.equals(last)) continue;
 			last.set(current);
-			
+
 			// get chunk
 			ChunkPos ckPos = new ChunkPos(current);
 			if (currentChunk == null || !ckPos.equals(currentChunk.getPos()))
@@ -100,23 +105,23 @@ public class MCTracer implements Tracer {
 			if (currentChunk == null || currentChunk.isEmpty()) continue;
 			// get section
 			int sectionNumber = SectionPos.blockToSectionCoord(current.getY());
-			if (sectionNumber < currentChunk.getMinSection() || sectionNumber > currentChunk.getMaxSection())
+			if (sectionNumber < currentChunk.getMinSection() || sectionNumber >= currentChunk.getMaxSection())
 				continue;
 			LevelChunkSection section = currentChunk.getSection(currentChunk.getSectionIndexFromSectionY(sectionNumber));
 			// skip if it has no blocks
 			if (section.hasOnlyAir()) continue;
-			
+
 			BlockState state = section.getBlockState(
 					current.getX() & 15,
 					current.getY() & 15,
 					current.getZ() & 15
 			);
 			if (state.isAir()) continue;
-			
+
 			VoxelShape shape = state.getCollisionShape(level, current);
-			
+
 			BlockHitResult res = null;
-			
+
 			if (!shape.isEmpty()) {
 				BlockHitResult result = shape.clip(
 						new Vec3(
@@ -131,24 +136,24 @@ public class MCTracer implements Tracer {
 						),
 						current.immutable()
 				);
-				
+
 				if (result == null || result.getType() == HitResult.Type.MISS)
 					continue;
-				
+
 				res = result;
 			}
-			
+
 			if (res != null && res.getType() != HitResult.Type.MISS)
 				return res;
 		}
-		
+
 		return BlockHitResult.miss(
 				new Vec3(worker.x, worker.y, worker.z),
 				Direction.UP,
 				current
 		);
 	}
-	
+
 	@Override
 	public double traceDist(Vector3 start, Vector3 end, Direction[] dir) {
 		BlockHitResult result = trace(start, end);
@@ -161,16 +166,16 @@ public class MCTracer implements Tracer {
 			dir[0] = result.getDirection();
 			// TODO: figure out where the "surface" of the block is
 		}
-		
+
 		return start.distance(end);
 //		return 0;
 	}
-	
+
 	@Override
 	public void recenter(Cloth cloth) {
 		chunks.clear();
 	}
-	
+
 	public void setLevel(Level level) {
 		this.level = level;
 	}
