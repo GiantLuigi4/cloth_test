@@ -240,7 +240,7 @@ public class ClothTest {
 		VertexConsumer consumer = Minecraft.getInstance().renderBuffers().bufferSource().getBuffer(RenderType.LINES);
 
 		boolean debug = true;
-		boolean debugVeloc = true;
+		boolean debugVeloc = false;
 		boolean debugConnection = true;
 
 //		mesh.draw(consumer, stack);

@@ -37,19 +37,23 @@ public class MCTracer implements Tracer {
 		return chunk;
 	}
 
+	LevelChunk currentChunk = null;
+
 	protected BlockHitResult trace(Vector3 start, Vector3 end) {
 		double dist = start.distance(end);
 
 		if (dist == 0) {
 			BlockPos bp = new BlockPos(start.x, start.y, start.z);
 			ChunkPos chunkPos = new ChunkPos(bp);
-			LevelChunk chunk = getChunk(chunkPos);
-			if (chunk == null) return BlockHitResult.miss(
-					new Vec3(start.x, start.y, start.z),
-					Direction.UP, new BlockPos(start.x, start.y, start.z)
-			);
+			if (currentChunk == null || !currentChunk.getPos().equals(chunkPos)) {
+				currentChunk = getChunk(chunkPos);
+				if (currentChunk == null) return BlockHitResult.miss(
+						new Vec3(start.x, start.y, start.z),
+						Direction.UP, new BlockPos(start.x, start.y, start.z)
+				);
+			}
 
-			BlockState state = chunk.getBlockState(bp);
+			BlockState state = currentChunk.getBlockState(bp);
 
 			if (!state.isAir()) {
 				VoxelShape sp = state.getShape(level, bp);
@@ -79,15 +83,11 @@ public class MCTracer implements Tracer {
 				end.y - start.y,
 				end.z - start.z
 		).normalize();
-		end = end.copy().add(dir.x * -0.01, dir.y * -0.01, dir.z * -0.01);
-
-		LevelChunk currentChunk = null;
+		end = end.copy().add(dir.x * 0.01, dir.y * 0.01, dir.z * 0.01);
 
 		double i;
-//		for (i = 0; i < dist; i += Math.max(dist / 80, Math.min(dist, 0.1))) {
-		for (i = 0; i < dist; i += dist / 80) {
-//			double pct = i / dist;
-			double pct = 0.5;
+		for (i = 0; i < dist; i += dist / 32) {
+			double pct = (i / dist);
 			worker.set(start).scl(pct).add(
 					end.x * (1 - pct),
 					end.y * (1 - pct),
@@ -125,9 +125,9 @@ public class MCTracer implements Tracer {
 			if (!shape.isEmpty()) {
 				BlockHitResult result = shape.clip(
 						new Vec3(
-								worker.x,
-								worker.y,
-								worker.z
+								start.x,
+								start.y,
+								start.z
 						),
 						new Vec3(
 								end.x,

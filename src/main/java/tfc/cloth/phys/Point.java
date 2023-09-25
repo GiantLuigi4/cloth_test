@@ -104,8 +104,8 @@ public class Point {
 		return refs;
 	}
 
-	public void normalize() {
-		Vector3 worker = new Vector3(pos);
+	public void normalize(Vector3 worker) {
+		worker.set(pos);
 		for (int i = 0; i < refs.length; i++) {
 			worker.set(pos)
 					.setDistance(refs[i], chainSize[i]);

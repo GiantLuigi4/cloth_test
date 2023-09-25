@@ -97,13 +97,16 @@ public class Cloth {
 	public void tick(Tracer tracer, Vector3 worker, Function<Vector3, Vector3> gravityResolver) {
 		tracer.recenter(this);
 		centerOfClamping = null;
-		for (Point point : orderedPoints) {
-			point.setCloth(this);
-			
-			point.tick(tracer, worker, gravityResolver.apply(point.getPos()));
+		for (int i = 0; i < orderedPoints.length; i++) {
+			Point pt = orderedPoints[i];
+			pt.setCloth(this);
+			pt.tick(tracer, worker, gravityResolver.apply(pt.getPos()));
 		}
 		
-		for (Point point : orderedPoints) point.constraint.apply(point);
+		for (int i = 0; i < orderedPoints.length; i++) {
+			Point pt;
+			(pt = orderedPoints[i]).constraint.apply(pt);
+		}
 
 //		for (int i = 0; i < 10; i++) {
 //			for (Point orderedPoint : orderedPoints) {
@@ -115,7 +118,7 @@ public class Cloth {
 //			}
 //		}
 
-		for (Point orderedPoint : orderedPoints) orderedPoint.normalize();
+		for (int i = 0; i < orderedPoints.length; i++) orderedPoints[i].normalize(worker);
 //		}
 		
 		double minX = Double.POSITIVE_INFINITY;
